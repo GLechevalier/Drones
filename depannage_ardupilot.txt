@@ -23,25 +23,13 @@ cmake ..
 make
 
 cd ~
+pip3 install -U colcon-common-extensions vcstool
 mkdir ~/Fast-DDS
 cd ~/Fast-DDS
-git clone https://github.com/eProsima/foonathan_memory_vendor.git
-mkdir foonathan_memory_vendor/build
-cd foonathan_memory_vendor/build
-cmake .. -DCMAKE_INSTALL_PREFIX=~/Fast-DDS/install -DBUILD_SHARED_LIBS=ON
-cmake --build . --target install
-cd ~/Fast-DDS
-git clone https://github.com/eProsima/Fast-CDR.git
-mkdir Fast-CDR/build
-cd Fast-CDR/build
-cmake .. -DCMAKE_INSTALL_PREFIX=~/Fast-DDS/install
-cmake --build . --target install
-cd ~/Fast-DDS
-git clone https://github.com/eProsima/Fast-DDS.git
-mkdir Fast-DDS/build
-cd Fast-DDS/build
-cmake ..  -DCMAKE_INSTALL_PREFIX=~/Fast-DDS/install
-cmake --build . --target install
+wget https://raw.githubusercontent.com/eProsima/Fast-DDS/master/fastdds.repos
+mkdir src
+vcs import src < fastdds.repos
+colcon build --packages-up-to fastdds
 
 
 sudo apt install openjdk-11-jdk
