@@ -36,9 +36,6 @@ Ce fichier est un guide à suivre pour installer le stack technique requis pour 
     - [F. Utiliser Cartographer SLAM en ROS2, SITL et Gazebo](#f-utiliser-cartographer-slam-en-ros2-sitl-et-gazebo)
     - [G. Simulation de plusieurs drones sans ROS](#g-simulation-de-plusieurs-drones-sans-ros)
     - [H. Simulation de plusieurs drones AVEC ROS](#h-simulation-de-plusieurs-drones-avec-ros)
-- [Mode Guided](#mode-guided)
-- [Arm Motors](#arm-motors)
-- [Takeoff](#takeoff)
 
 
 
@@ -242,6 +239,9 @@ Source :
 https://github.com/ArduPilot/ardupilot/tree/master/libraries/AP_DDS
 https://micro.ros.org/docs/tutorials/core/first_application_linux/
 
+
+Remarque : il est possible qu'il soit nécessaire de run la commande suivante avant d'installer la suite : ```sudo rosdep init``` et ```rosdep update```
+
 ```shell
 cd ~
 mkdir microros_ws
@@ -256,6 +256,7 @@ sudo apt-get install python3-pip
 colcon build
 source install/local_setup.bash
 ```
+
 
 ### C. Utiliser ROS2 avec ArduPilot SITL
 Source : https://ardupilot.org/dev/docs/ros.html
@@ -364,9 +365,9 @@ mavproxy.py --console --map --aircraft test --master=:14550
 
 TESTS pour voir si on peut controler le drone via ROS2
 
-```
-ros2 service call /ap/arm_motors ardupilot_msgs/srv/ArmMotors "{arm: True}"
+```shell
 ros2 service call /ap/mode_switch ardupilot_msgs/srv/ModeSwitch "{mode: 4}"
+ros2 service call /ap/arm_motors ardupilot_msgs/srv/ArmMotors "{arm: True}"
 ros2 service call /ap/prearm_check std_srvs/srv/Trigger
 ros2 service call /ap/experimental/takeoff ardupilot_msgs/srv/Takeoff "{alt: 10.5}"
 ```
@@ -374,6 +375,54 @@ ros2 service call /ap/experimental/takeoff ardupilot_msgs/srv/Takeoff "{alt: 10.
 Le drone décolle-t-il bien ?
 
 https://github.com/ArduPilot/ardupilot/tree/master/libraries/AP_DDS
+
+
+Attention, il n'est plus nécessaire d'utiliser MAVROS pour piloter le drone, on peut utiliser la commande suivante :
+La commande suivante permet de piloter la velocité du drone
+```shell
+ros2 topic pub /ap/cmd_vel geometry_msgs/msg/TwistStamped "{header: {stamp: {sec: 0, nanosec: 0}, frame_id: 'map'}, twist: {linear: {x: 5.0, y: 0.0, z: 5.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}"
+```
+
+Rappel, pour savoir comment utiliser un service/action :
+1. Premièrement, savoir quels services existent : ``` ros2 service list ```
+2. Deuxièmement, connaitre le type d'un service en particulier : 
+  ```shell
+  ros2 service type <nom_du_service>
+  # Renvoie :
+  # <type_du_service_en_question>
+  ```
+3. Enfin, 
+   ```
+   ros2 interface show <type_du_service_en_question>
+   # Renvoie :
+   # description du service
+   #
+   # <type de l'input 1> <nom_input_1>
+   # <type de l'input 2> <nom_input_2>
+   # ...
+   # <type de l'input m> <nom_input_m>
+   # ---
+   # <type de l'output 1> <nom_output_1>
+   # <type de l'output 2> <nom_output_2>
+   # ...
+   # <type de l'output p> <nom_output_p>
+
+
+   # ------------------------------
+   # Exemple
+   # ------------------------------
+
+   # ros2 interface show mavros_msgs/srv/CommandBool
+
+   # bool value
+   # ---
+   # bool success
+   # uint8 result
+   ```
+4. Utiliser la commande comme tel : ``` ros2 service call <nom_du_service> <type_du_service_en_question> "{<nom_input_1> : <valeur_à_affecter>, <nom_input_2> : <valeur_à_affecter>}"```
+   Tous les inputs ne doivent pas forcément être spécifiés, des valeurs par défaut sont mises à leur place si un couple "input"/"valeur" n'est pas mis dans le dictionnaire. 
+
+
 
 
 ### F. Installer MAVROS pour ROS2
@@ -440,44 +489,6 @@ ros2 topic pub /mavros/setpoint_position/local geometry_msgs/msg/PoseStamped "{
 ```
 
 
-Rappel, pour savoir comment utiliser un service/action :
-1. Premièrement, savoir quels services existent : ``` ros2 service list ```
-2. Deuxièmement, connaitre le type d'un service en particulier : 
-  ```shell
-  ros2 service type <nom_du_service>
-  # Renvoie :
-  # <type_du_service_en_question>
-  ```
-3. Enfin, 
-   ```
-   ros2 interface show <type_du_service_en_question>
-   # Renvoie :
-   # description du service
-   #
-   # <type de l'input 1> <nom_input_1>
-   # <type de l'input 2> <nom_input_2>
-   # ...
-   # <type de l'input m> <nom_input_m>
-   # ---
-   # <type de l'output 1> <nom_output_1>
-   # <type de l'output 2> <nom_output_2>
-   # ...
-   # <type de l'output p> <nom_output_p>
-
-
-   # ------------------------------
-   # Exemple
-   # ------------------------------
-
-   # ros2 interface show mavros_msgs/srv/CommandBool
-
-   # bool value
-   # ---
-   # bool success
-   # uint8 result
-   ```
-4. Utiliser la commande comme tel : ``` ros2 service call <nom_du_service> <type_du_service_en_question> "{<nom_input_1> : <valeur_à_affecter>, <nom_input_2> : <valeur_à_affecter>}"```
-   Tous les inputs ne doivent pas forcément être spécifiés, des valeurs par défaut sont mises à leur place si un couple "input"/"valeur" n'est pas mis dans le dictionnaire. 
 
 
 ### F. Utiliser Cartographer SLAM en ROS2, SITL et Gazebo
@@ -682,26 +693,30 @@ source ~/ardu_ws/install/setup.sh
 ros2 launch ardupilot_gz_bringup iris_runway_swarm.launch.py
 ```
 
-
+```
 colcon build --packages-up-to ardupilot_gz_bringup
 colcon build --packages-select mavlink
 colcon build --packages-select mavros
+```
 
-
+```
 ros2 launch mavros multi-apm.launch 
+```
 
 
+``` shell
 # Mode Guided
 ros2 service call /drone1/set_mode mavros_msgs/srv/SetMode "{base_mode: 0, custom_mode: 'GUIDED'}"
 ros2 service call /drone2/set_mode mavros_msgs/srv/SetMode "{base_mode: 0, custom_mode: 'GUIDED'}"
 ros2 service call /drone3/set_mode mavros_msgs/srv/SetMode "{base_mode: 0, custom_mode: 'GUIDED'}"
 
 
-
 # Arm Motors
 ros2 service call /drone1/cmd/arming mavros_msgs/srv/CommandBool "{value: true}"
 ros2 service call /drone2/cmd/arming mavros_msgs/srv/CommandBool "{value: true}"
 ros2 service call /drone3/cmd/arming mavros_msgs/srv/CommandBool "{value: true}"
+
+
 # Takeoff
 ros2 service call /drone1/cmd/takeoff mavros_msgs/srv/CommandTOL "{min_pitch: 0.0, yaw: 0.0, latitude: 0.0, longitude: 0.0, altitude: 5.0}" 
 ros2 service call /drone2/cmd/takeoff mavros_msgs/srv/CommandTOL "{min_pitch: 0.0, yaw: 0.0, latitude: 0.0, longitude: 0.0, altitude: 5.0}" 
@@ -715,3 +730,4 @@ ros2 topic pub /drone1/setpoint_position/local geometry_msgs/msg/PoseStamped "{
     orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
   }
 }"
+```
