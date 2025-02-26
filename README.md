@@ -57,6 +57,8 @@ Tools/environment_install/install-prereqs-ubuntu.sh -y
 . ~/.profile
 ```
 
+Il faut drestart son PC a ce moment la ;)
+
 Vérification ArduPilot:
 (shell Linux)
 ```shell
