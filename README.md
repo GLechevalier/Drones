@@ -260,7 +260,62 @@ source install/local_setup.bash
 ```
 
 
-### C. Utiliser ROS2 avec ArduPilot SITL
+### C. FastDDS Installation (dépendance de ROS2-Ardupilot):
+Source : https://fast-dds.docs.eprosima.com/en/latest/installation/sources/sources_linux.html#fast-dds-library-installation
+
+Installer les dépendances de FastDDS :
+```
+sudo apt install cmake g++ python3-pip wget git
+sudo apt install libasio-dev libtinyxml2-dev
+sudo apt install libssl-dev
+sudo apt install libp11-dev
+sudo apt install softhsm2
+sudo usermod -a -G softhsm <user>
+sudo apt install libengine-pkcs11-openssl
+```
+
+Checker que c'est bon :
+```
+p11-kit list-modules
+openssl engine pkcs11 -t
+```
+
+Installer Gtest (dépendance de FastDDS):
+```
+mkdir ~/gtest
+cd gtest/
+git clone --branch release-1.11.0 https://github.com/google/googletest src/googletest-distribution
+cd src/googletest-distribution/
+mkdir build
+cd build
+cmake ..
+make
+```
+
+Installation concrète de Fast DDS
+```
+cd ~
+pip3 install -U colcon-common-extensions vcstool
+mkdir ~/Fast-DDS
+cd ~/Fast-DDS
+wget https://raw.githubusercontent.com/eProsima/Fast-DDS/master/fastdds.repos
+mkdir src
+vcs import src < fastdds.repos
+colcon build --packages-up-to fastdds
+```
+
+Installation de FastDDS Gen :
+```
+sudo apt install openjdk-11-jdk
+mkdir -p ~/Fast-DDS/src
+cd ~/Fast-DDS/src
+git clone --recursive https://github.com/eProsima/Fast-DDS-Gen.git fastddsgen
+cd fastddsgen
+./gradlew assemble
+```
+
+
+### D. Utiliser ROS2 avec ArduPilot SITL
 Source : https://ardupilot.org/dev/docs/ros.html
 
 ```shell
@@ -327,7 +382,7 @@ colcon test --executor sequential --parallel-workers 0 --base-paths src/ardupilo
 colcon test-result --all --verbose
 ```
 
-### D. Utiliser ROS2 avec SITL
+### E. Utiliser ROS2 avec SITL
 Source : https://ardupilot.org/dev/docs/ros2-sitl.html
 
 ```shell
@@ -338,7 +393,7 @@ ros2 launch ardupilot_sitl sitl_dds_udp.launch.py transport:=udp4 refs:=$(ros2 p
 ```
 
 
-### E. Utiliser Gazebo + SITL + ROS2
+### F. Utiliser Gazebo + SITL + ROS2
 Source : https://ardupilot.org/dev/docs/ros2-gazebo.html
 ```shell
 cd ~/ardu_ws
@@ -427,7 +482,7 @@ Rappel, pour savoir comment utiliser un service/action :
 
 
 
-### F. Installer MAVROS pour ROS2
+### G. Installer MAVROS pour ROS2
 
 
 
@@ -458,7 +513,7 @@ ros2 launch mavros apm.launch fcu_url:=udp://:14550@
 ```
 
 
-### G. Utiliser ROS, MAVROS pour controler le drone
+### H. Utiliser ROS, MAVROS pour controler le drone
 
 
 ``` shell
@@ -493,7 +548,7 @@ ros2 topic pub /mavros/setpoint_position/local geometry_msgs/msg/PoseStamped "{
 
 
 
-### F. Utiliser Cartographer SLAM en ROS2, SITL et Gazebo
+### I. Utiliser Cartographer SLAM en ROS2, SITL et Gazebo
 ```shell
 cd ~/ardu_ws/src
 git clone git@github.com:ArduPilot/ardupilot_ros.git
@@ -523,7 +578,7 @@ mavproxy.py --console --map --aircraft test --master=:14550
 ```
 
 
-### G. Simulation de plusieurs drones sans ROS
+### J. Simulation de plusieurs drones sans ROS
 
 - Copier le dossier Iris_with_gimball des modèles gazebo (ardupilot_gazebo/Models) pour faire différents dossiers drone1, drone2, …
 
@@ -565,7 +620,7 @@ sim_vehicle.py -v ArduCopter -f swarm-drone1 --model JSON --console -I1 --out=tc
 ```
 
 
-### H. Simulation de plusieurs drones AVEC ROS
+### K. Simulation de plusieurs drones AVEC ROS
 
 Aller dans ~/ardu_ws/src/ardupilot_gz/ardupilot_gz_bringup/launch/
 Copier le fichier iris_runway.launch.py
